@@ -310,7 +310,7 @@ static int stub_probe(struct usb_device *udev)
 	struct stub_device *sdev = NULL;
 	const char *udev_busid = dev_name(&udev->dev);
 	struct bus_id_priv *busid_priv;
-	int rc = 0;
+	int rc = 0, config_selection = -1;
 	char save_status;
 
 	dev_dbg(&udev->dev, "Enter probe\n");
@@ -376,6 +376,25 @@ static int stub_probe(struct usb_device *udev)
 
 	/* release the busid_lock */
 	put_busid_priv(busid_priv);
+
+	/*
+	 * Setting a configuration as defualt if the device has not been configured.
+	 * Note that this has to be done before usb_hub_claim_port(),
+	 * so that usb_choose_configuration() can really make a choice for us,
+	 * rather than just returning 0, which might cause this device to remain unconfigured
+	 */
+	if (!udev->actconfig && udev->config) {
+		config_selection = usb_choose_configuration(udev);
+		if (config_selection >= 0) {
+			dev_info(&udev->dev, "usbip-host: trying to set the configuration of the device(%x:%x) to this one(bConfigurationValue = %d)", udev->descriptor.idVendor, udev->descriptor.idProduct, config_selection);
+			usb_set_configuration(udev, config_selection);
+		}
+	}
+
+	if (!udev->actconfig)
+		dev_warn(&udev->dev, "usbip-host: the device is not configured; you might need to configure it manually to make it attachable at the client side");
+	else
+		dev_info(&udev->dev, "usbip-host: the configuration(bConfigurationValue = %u) is active", udev->actconfig->desc.bConfigurationValue);
 
 	/*
 	 * Claim this hub port.
