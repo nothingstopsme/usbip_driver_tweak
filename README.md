@@ -53,4 +53,4 @@ Note that if you find this driver (based on the code from the Linux repository u
 2. Replace the Makefile with the one from this tweak (might need to update the .o files listed in the Makefile accordingly)
 3. Copy/Paste the changes made in this [commit](https://github.com/nothingstopsme/usbip_driver_tweak/commit/cb496aff309cf6655b15c58bbb3cdb15c31cf0fa) to the corresponding files
 
-This should allow you to build your own version of this tweaked driver.
+This should allow you to build your own version against the kernel you prefer.
